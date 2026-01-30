@@ -1,0 +1,29 @@
+name: Global Weather Sync
+
+on:
+  schedule:
+    - cron: '0 8 * * *' 
+  workflow_dispatch:      
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install Requests
+        run: pip install requests
+      - name: Update Weather
+        run: python weather.py
+      - name: Commit Activity
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add weather_data.json
+          git commit -m "Automated Weather Sync: $(date)" || exit 0
+          git push
