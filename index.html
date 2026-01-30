@@ -2,115 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Atmosphere Living</title>
+    <title>Atmosphere / Soft Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --accent: rgba(255,255,255,0.15); }
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #050505; color: white; font-family: 'Inter', system-ui, sans-serif; }
-        
-        #vfx-layer { position: fixed; inset: 0; z-index: 0; transition: background 3s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        /* Ultra-Minimal Search */
-        .search-input {
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid var(--accent);
-            letter-spacing: 0.2em;
-            transition: all 0.5s ease;
+        :root { 
+            --text-main: #444b54; 
+            --accent-soft: rgba(0,0,0,0.05);
         }
-        .search-input:focus { border-bottom: 1px solid white; outline: none; letter-spacing: 0.4em; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #f4f4f4; color: var(--text-main); font-family: 'Inter', sans-serif; }
+        
+        #vfx-layer { position: fixed; inset: 0; z-index: 0; transition: background 3s ease; }
+        
+        /* Glassmorphism for Light Mode */
+        .glass-light { 
+            background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            border-radius: 4rem; 
+        }
 
-        /* Sovereignty Typography */
+        /* Particle VFX - Adjusted for Visibility on Light Backgrounds */
+        .rain { position: absolute; background: rgba(70, 130, 180, 0.4); width: 1px; }
+        .snow { position: absolute; background: white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.05); }
+        
         .big-temp {
-            font-size: clamp(8rem, 20vw, 16rem);
-            font-weight: 100;
-            line-height: 0.8;
+            font-size: clamp(8rem, 20vw, 15rem);
+            font-weight: 200;
             letter-spacing: -0.05em;
-            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
+            color: var(--text-main);
+            opacity: 0.9;
         }
 
-        /* Particle VFX */
-        .rain { position: absolute; background: linear-gradient(transparent, #fff); width: 1px; opacity: 0.2; }
-        .snow { position: absolute; background: white; border-radius: 50%; opacity: 0.6; filter: blur(1px); }
-        .lightning { position: fixed; inset: 0; background: white; opacity: 0; z-index: 1; pointer-events: none; }
-        .flash { animation: thunder 5s infinite; }
-        @keyframes thunder { 0%, 94%, 100% { opacity: 0; } 96% { opacity: 0.8; } 98% { opacity: 0.2; } }
-
-        /* Subtle Fade In */
-        .reveal { animation: reveal 1.5s forwards; }
-        @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        input::placeholder { color: #999; }
     </style>
 </head>
 <body class="flex items-center justify-center">
 
     <div id="vfx-layer"></div>
-    <div id="lightning" class="lightning"></div>
 
     <main class="relative z-10 w-full max-w-4xl px-10">
-        <div id="search-container" class="text-center transition-all duration-1000">
-            <h1 class="text-[10px] tracking-[1.5em] uppercase opacity-20 mb-32">Atmosphere</h1>
-            <input type="text" id="city-input" placeholder="SEARCH LOCATION" 
-                   class="search-input w-full max-w-md py-4 text-center text-xs">
-            <div id="results" class="mt-4 flex flex-col items-center space-y-2 opacity-40 text-[10px] tracking-widest uppercase"></div>
+        <div id="search-container" class="text-center transition-all duration-700">
+            <h1 class="text-[10px] tracking-[1.5em] uppercase opacity-40 mb-32">Atmosphere</h1>
+            <input type="text" id="city-input" placeholder="Find a place..." 
+                   class="bg-transparent border-b border-black/10 w-full max-w-sm py-4 text-center text-sm focus:outline-none focus:border-black/30 transition-all">
+            <div id="results" class="mt-6 flex flex-col space-y-3 text-[11px] tracking-widest uppercase opacity-60"></div>
         </div>
 
-        <div id="weather-display" class="hidden text-center reveal">
-            <div id="icon" class="text-4xl mb-6 opacity-80">☀️</div>
-            <div class="big-temp inline-block relative">
-                <span id="temp">--</span><span class="text-[0.3em] absolute top-4 -right-12">°</span>
+        <div id="weather-display" class="hidden text-center opacity-0 transition-all duration-1000 translate-y-4">
+            <div id="icon" class="text-5xl mb-6 grayscale opacity-60">☀️</div>
+            <div class="big-temp relative inline-block">
+                <span id="temp">--</span><span class="text-[0.2em] absolute top-8 -right-10">°</span>
             </div>
-            <div class="mt-12 space-y-1">
-                <h2 id="city-name" class="text-sm tracking-[0.6em] uppercase font-semibold">---</h2>
-                <p id="desc" class="text-[10px] tracking-[0.4em] uppercase opacity-30">---</p>
+            <div class="mt-8">
+                <h2 id="city-name" class="text-sm tracking-[0.8em] uppercase font-medium">---</h2>
+                <p id="desc" class="text-[9px] tracking-[0.4em] uppercase opacity-40 mt-2">---</p>
             </div>
 
-            <div class="flex justify-center space-x-20 mt-24 text-[10px] tracking-[0.3em] uppercase opacity-30">
-                <div><p>Wind</p><p id="wind" class="mt-2 text-white opacity-100">--</p></div>
-                <div><p>Humid</p><p id="humid" class="mt-2 text-white opacity-100">--</p></div>
+            <div class="flex justify-center space-x-16 mt-20 text-[10px] tracking-[0.3em] uppercase opacity-40">
+                <div><p>Wind</p><p id="wind" class="mt-1 font-bold">--</p></div>
+                <div><p>Humid</p><p id="humid" class="mt-1 font-bold">--</p></div>
             </div>
             
-            <button onclick="location.reload()" class="mt-32 text-[8px] tracking-[0.5em] opacity-10 hover:opacity-100 transition-opacity uppercase">Back</button>
+            <button onclick="location.reload()" class="mt-24 text-[8px] tracking-[0.5em] opacity-30 hover:opacity-100 transition-opacity uppercase">Change Location</button>
         </div>
     </main>
 
     <script>
         const vfx = document.getElementById('vfx-layer');
-        const input = document.getElementById('city-input');
-        const results = document.getElementById('results');
+        const searchUI = document.getElementById('search-container');
+        const displayUI = document.getElementById('weather-display');
 
-        // Logic to read from your GitHub-automated JSON
-        async function checkAutoSync() {
-            try {
-                const res = await fetch('weather_data.json');
-                if (res.ok) {
-                    const json = await res.json();
-                    render(json.current, "Current Location");
-                    document.getElementById('search-container').classList.add('hidden');
-                }
-            } catch (e) { /* Fallback to manual search if no sync file */ }
-        }
-
-        input.addEventListener('input', async (e) => {
-            const q = e.target.value;
-            if (q.length < 2) { results.innerHTML = ''; return; }
-            const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=3`);
-            const data = await res.json();
-            results.innerHTML = data.features.map(f => `
-                <div class="cursor-pointer hover:text-white transition-colors" 
-                     onclick="fetchManual('${f.properties.name}', ${f.geometry.coordinates[1]}, ${f.geometry.coordinates[0]})">
-                    ${f.properties.name} / ${f.properties.country}
-                </div>
-            `).join('');
-        });
+        // Atmospheric Color Palette (Dull/Muted)
+        const weatherPalettes = {
+            clear: 'linear-gradient(135deg, #e0f2f1 0%, #fce4ec 100%)', // Soft Peach/Mint
+            clouds: 'linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%)', // Muted Sky Blue
+            rain: 'linear-gradient(135deg, #d7d2cc 0%, #304352 100%)',    // Foggy Grey-Blue (lightened)
+            snow: 'linear-gradient(135deg, #e6e9f0 0%, #eef1f5 100%)',    // Paper White
+            fog: 'linear-gradient(135deg, #bdc3c7 0%, #ebedee 100%)'      // Mist Grey
+        };
 
         async function fetchManual(name, lat, lon) {
-            document.getElementById('search-container').style.opacity = '0';
+            searchUI.style.opacity = '0';
             const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`);
             const data = await res.json();
+            
             setTimeout(() => {
-                document.getElementById('search-container').classList.add('hidden');
+                searchUI.classList.add('hidden');
+                displayUI.classList.remove('hidden');
+                setTimeout(() => displayUI.classList.add('opacity-100', 'translate-y-0'), 50);
                 render(data.current, name);
-            }, 500);
+            }, 600);
         }
 
         function render(data, name) {
@@ -120,51 +101,55 @@
             document.getElementById('wind').innerText = data.wind_speed_10m + ' KM/H';
             document.getElementById('humid').innerText = data.relative_humidity_2m + '%';
 
-            let mode = 'clear', icon = '☀️', desc = 'Clear Sky';
-            if (code >= 95) { mode = 'storm'; icon = '⛈️'; desc = 'Thunderstorm'; }
-            else if (code >= 71) { mode = 'snow'; icon = '❄️'; desc = 'Snowfall'; }
-            else if (code >= 51) { mode = 'rain'; icon = '🌧️'; desc = 'Rainy'; }
+            let mode = 'clear', icon = '☀️', desc = 'Clear';
+            if (code >= 71) { mode = 'snow'; icon = '❄️'; desc = 'Snow'; }
+            else if (code >= 51) { mode = 'rain'; icon = '🌧️'; desc = 'Rain'; }
+            else if (code >= 45) { mode = 'fog'; icon = '🌫️'; desc = 'Fog'; }
             else if (code >= 1) { mode = 'clouds'; icon = '☁️'; desc = 'Cloudy'; }
 
             document.getElementById('icon').innerText = icon;
             document.getElementById('desc').innerText = desc;
-            document.getElementById('weather-display').classList.remove('hidden');
-            applyVFX(mode);
+            
+            vfx.style.background = weatherPalettes[mode] || weatherPalettes.clear;
+            applyParticles(mode);
         }
 
-        function applyVFX(mode) {
+        function applyParticles(mode) {
             vfx.innerHTML = '';
-            document.getElementById('lightning').classList.remove('flash');
-
-            const themes = {
-                clear: 'radial-gradient(circle at 50% 50%, #111, #000)',
-                clouds: 'linear-gradient(to bottom, #1a1a1a, #050505)',
-                rain: '#050505',
-                storm: '#000',
-                snow: 'linear-gradient(to bottom, #111, #222)'
-            };
-            vfx.style.background = themes[mode] || themes.clear;
-
-            if (mode === 'storm') document.getElementById('lightning').classList.add('flash');
-            
-            const count = (mode === 'rain' || mode === 'snow') ? 80 : 0;
-            for (let i = 0; i < count; i++) {
-                const p = document.createElement('div');
-                p.className = mode;
-                p.style.left = Math.random() * 100 + '%';
-                if (mode === 'rain') {
-                    p.style.height = (Math.random() * 50 + 20) + 'px';
-                    p.animate([{top: '-10%'}, {top: '110%'}], {duration: 400 + Math.random()*400, iterations: Infinity});
-                } else {
-                    const size = Math.random() * 3 + 1;
-                    p.style.width = p.style.height = size + 'px';
-                    p.animate([{top: '-5%', opacity: 0}, {top: '100%', opacity: 0.6}], {duration: 3000 + Math.random()*3000, iterations: Infinity});
+            if (mode === 'rain' || mode === 'snow') {
+                for (let i = 0; i < 50; i++) {
+                    const p = document.createElement('div');
+                    p.className = mode;
+                    p.style.left = Math.random() * 100 + '%';
+                    if (mode === 'rain') {
+                        p.style.height = (Math.random() * 30 + 10) + 'px';
+                        p.animate([{top: '-10%'}, {top: '110%'}], {duration: 600 + Math.random()*400, iterations: Infinity});
+                    } else {
+                        p.style.width = p.style.height = (Math.random() * 5 + 2) + 'px';
+                        p.animate([{top: '-5%', opacity: 0}, {top: '100%', opacity: 1}], {duration: 4000 + Math.random()*3000, iterations: Infinity});
+                    }
+                    vfx.appendChild(p);
                 }
-                vfx.appendChild(p);
             }
         }
 
-        checkAutoSync();
+        // Search logic
+        document.getElementById('city-input').addEventListener('input', async (e) => {
+            const q = e.target.value;
+            if (q.length < 2) return;
+            const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=3`);
+            const data = await res.json();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = data.features.map(f => `
+                <div class="cursor-pointer hover:opacity-100 transition-opacity" 
+                     onclick="fetchManual('${f.properties.name}', ${f.geometry.coordinates[1]}, ${f.geometry.coordinates[0]})">
+                    ${f.properties.name} / ${f.properties.country}
+                </div>
+            `).join('');
+        });
+
+        // Initialize background
+        vfx.style.background = weatherPalettes.clear;
     </script>
 </body>
 </html>
