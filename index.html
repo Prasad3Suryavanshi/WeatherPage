@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Atmosphere Living</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --accent: rgba(255,255,255,0.15); }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #050505; color: white; font-family: 'Inter', system-ui, sans-serif; }
+        
+        #vfx-layer { position: fixed; inset: 0; z-index: 0; transition: background 3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Ultra-Minimal Search */
+        .search-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--accent);
+            letter-spacing: 0.2em;
+            transition: all 0.5s ease;
+        }
+        .search-input:focus { border-bottom: 1px solid white; outline: none; letter-spacing: 0.4em; }
+
+        /* Sovereignty Typography */
+        .big-temp {
+            font-size: clamp(8rem, 20vw, 16rem);
+            font-weight: 100;
+            line-height: 0.8;
+            letter-spacing: -0.05em;
+            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
+        }
+
+        /* Particle VFX */
+        .rain { position: absolute; background: linear-gradient(transparent, #fff); width: 1px; opacity: 0.2; }
+        .snow { position: absolute; background: white; border-radius: 50%; opacity: 0.6; filter: blur(1px); }
+        .lightning { position: fixed; inset: 0; background: white; opacity: 0; z-index: 1; pointer-events: none; }
+        .flash { animation: thunder 5s infinite; }
+        @keyframes thunder { 0%, 94%, 100% { opacity: 0; } 96% { opacity: 0.8; } 98% { opacity: 0.2; } }
+
+        /* Subtle Fade In */
+        .reveal { animation: reveal 1.5s forwards; }
+        @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex items-center justify-center">
+
+    <div id="vfx-layer"></div>
+    <div id="lightning" class="lightning"></div>
+
+    <main class="relative z-10 w-full max-w-4xl px-10">
+        <div id="search-container" class="text-center transition-all duration-1000">
+            <h1 class="text-[10px] tracking-[1.5em] uppercase opacity-20 mb-32">Atmosphere</h1>
+            <input type="text" id="city-input" placeholder="SEARCH LOCATION" 
+                   class="search-input w-full max-w-md py-4 text-center text-xs">
+            <div id="results" class="mt-4 flex flex-col items-center space-y-2 opacity-40 text-[10px] tracking-widest uppercase"></div>
+        </div>
+
+        <div id="weather-display" class="hidden text-center reveal">
+            <div id="icon" class="text-4xl mb-6 opacity-80">☀️</div>
+            <div class="big-temp inline-block relative">
+                <span id="temp">--</span><span class="text-[0.3em] absolute top-4 -right-12">°</span>
+            </div>
+            <div class="mt-12 space-y-1">
+                <h2 id="city-name" class="text-sm tracking-[0.6em] uppercase font-semibold">---</h2>
+                <p id="desc" class="text-[10px] tracking-[0.4em] uppercase opacity-30">---</p>
+            </div>
+
+            <div class="flex justify-center space-x-20 mt-24 text-[10px] tracking-[0.3em] uppercase opacity-30">
+                <div><p>Wind</p><p id="wind" class="mt-2 text-white opacity-100">--</p></div>
+                <div><p>Humid</p><p id="humid" class="mt-2 text-white opacity-100">--</p></div>
+            </div>
+            
+            <button onclick="location.reload()" class="mt-32 text-[8px] tracking-[0.5em] opacity-10 hover:opacity-100 transition-opacity uppercase">Back</button>
+        </div>
+    </main>
+
+    <script>
+        const vfx = document.getElementById('vfx-layer');
+        const input = document.getElementById('city-input');
+        const results = document.getElementById('results');
+
+        // Logic to read from your GitHub-automated JSON
+        async function checkAutoSync() {
+            try {
+                const res = await fetch('weather_data.json');
+                if (res.ok) {
+                    const json = await res.json();
+                    render(json.current, "Current Location");
+                    document.getElementById('search-container').classList.add('hidden');
+                }
+            } catch (e) { /* Fallback to manual search if no sync file */ }
+        }
+
+        input.addEventListener('input', async (e) => {
+            const q = e.target.value;
+            if (q.length < 2) { results.innerHTML = ''; return; }
+            const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=3`);
+            const data = await res.json();
+            results.innerHTML = data.features.map(f => `
+                <div class="cursor-pointer hover:text-white transition-colors" 
+                     onclick="fetchManual('${f.properties.name}', ${f.geometry.coordinates[1]}, ${f.geometry.coordinates[0]})">
+                    ${f.properties.name} / ${f.properties.country}
+                </div>
+            `).join('');
+        });
+
+        async function fetchManual(name, lat, lon) {
+            document.getElementById('search-container').style.opacity = '0';
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`);
+            const data = await res.json();
+            setTimeout(() => {
+                document.getElementById('search-container').classList.add('hidden');
+                render(data.current, name);
+            }, 500);
+        }
+
+        function render(data, name) {
+            const code = data.weather_code;
+            document.getElementById('temp').innerText = Math.round(data.temperature_2m);
+            document.getElementById('city-name').innerText = name;
+            document.getElementById('wind').innerText = data.wind_speed_10m + ' KM/H';
+            document.getElementById('humid').innerText = data.relative_humidity_2m + '%';
+
+            let mode = 'clear', icon = '☀️', desc = 'Clear Sky';
+            if (code >= 95) { mode = 'storm'; icon = '⛈️'; desc = 'Thunderstorm'; }
+            else if (code >= 71) { mode = 'snow'; icon = '❄️'; desc = 'Snowfall'; }
+            else if (code >= 51) { mode = 'rain'; icon = '🌧️'; desc = 'Rainy'; }
+            else if (code >= 1) { mode = 'clouds'; icon = '☁️'; desc = 'Cloudy'; }
+
+            document.getElementById('icon').innerText = icon;
+            document.getElementById('desc').innerText = desc;
+            document.getElementById('weather-display').classList.remove('hidden');
+            applyVFX(mode);
+        }
+
+        function applyVFX(mode) {
+            vfx.innerHTML = '';
+            document.getElementById('lightning').classList.remove('flash');
+
+            const themes = {
+                clear: 'radial-gradient(circle at 50% 50%, #111, #000)',
+                clouds: 'linear-gradient(to bottom, #1a1a1a, #050505)',
+                rain: '#050505',
+                storm: '#000',
+                snow: 'linear-gradient(to bottom, #111, #222)'
+            };
+            vfx.style.background = themes[mode] || themes.clear;
+
+            if (mode === 'storm') document.getElementById('lightning').classList.add('flash');
+            
+            const count = (mode === 'rain' || mode === 'snow') ? 80 : 0;
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = mode;
+                p.style.left = Math.random() * 100 + '%';
+                if (mode === 'rain') {
+                    p.style.height = (Math.random() * 50 + 20) + 'px';
+                    p.animate([{top: '-10%'}, {top: '110%'}], {duration: 400 + Math.random()*400, iterations: Infinity});
+                } else {
+                    const size = Math.random() * 3 + 1;
+                    p.style.width = p.style.height = size + 'px';
+                    p.animate([{top: '-5%', opacity: 0}, {top: '100%', opacity: 0.6}], {duration: 3000 + Math.random()*3000, iterations: Infinity});
+                }
+                vfx.appendChild(p);
+            }
+        }
+
+        checkAutoSync();
+    </script>
+</body>
+</html>
