@@ -1,7 +1,7 @@
 {
     "latitude": 40.710335,
     "longitude": -73.99308,
-    "generationtime_ms": 0.13208389282226562,
+    "generationtime_ms": 0.1405477523803711,
     "utc_offset_seconds": -14400,
     "timezone": "America/New_York",
     "timezone_abbreviation": "GMT-4",
@@ -15,11 +15,11 @@
         "wind_speed_10m": "km/h"
     },
     "current": {
-        "time": "2026-04-21T05:15",
+        "time": "2026-04-22T05:00",
         "interval": 900,
-        "temperature_2m": -0.5,
-        "relative_humidity_2m": 61,
-        "weather_code": 0,
-        "wind_speed_10m": 7.8
+        "temperature_2m": 7.7,
+        "relative_humidity_2m": 74,
+        "weather_code": 3,
+        "wind_speed_10m": 13.7
     }
 }
